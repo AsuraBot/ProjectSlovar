@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 bigdic.txt
 word_rus.txt
+*.db
