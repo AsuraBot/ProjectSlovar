@@ -24,17 +24,20 @@ def search(cursor, word_len=None, letters=None):
 connection = sqlite3.connect('dictionary.db')
 cursor = connection.cursor()
 
-# Ввод числа для поиска слов
-try:
-    word_len = int(input("Ведите количество букв: "))
-except ValueError:
-    word_len = None
 
-# Ввод букв для поиска слов
-letters = input("Введите буквы: ")
+while True:
+    # Ввод числа для поиска слов
+    try:
+        word_len = int(input("Введите количество букв: "))
+    except ValueError:
+        word_len = None
 
-res = search(cursor, word_len, letters)
-print(res)
+    # Ввод букв для поиска слов
+    letters = input("Введите буквы: ")
+
+    res = search(cursor, word_len, letters)
+    for item, in res:
+        print(item)
 
 connection.commit()
 connection.close()
