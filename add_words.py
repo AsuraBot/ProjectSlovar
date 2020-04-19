@@ -1,54 +1,56 @@
-with open('bigdic.txt', 'r', encoding='utf8') as f:
-    buffer = []
-    main_words = {}
-    sub_word = {}
-    word = []
-    sub_words = []
-    while True:
-        line = f.readline()
-        if line != ' \n':
-            if line.find(' | сущ ') != -1:
-                buffer.append(line)
-        else:
-            if len(buffer) == 12:
-                for item in buffer:
-                    s_item = item.split('|')
-                    word = s_item[0].strip()
-                    options = s_item[1].strip().split()
-                    if item.startswith('  '):
-                        if not main_words.get('word_plural'):
-                            sub_word['word'] = word
-                            sub_word['word_case'] = options[-1]
-                            sub_words.append(sub_word.copy())
-                        else:
+import sqlite3
 
-                            sub_word['word_plural'] = word
-                            print('  ', word, options)
-                    else:
-                        if not main_words.get('word'):
-                            sub_word['word'] = word
-                            sub_word['word_case'] = options[-1]
-                            sub_words.append(sub_word.copy())
 
-                            main_words['word'] = word
-                            main_words['is_nominal'] = 1
-                            if options[3] == 'муж':
-                                main_words['gender'] = 'М'
-                            elif options[3] == 'жен':
-                                main_words['gender'] = 'Ж'
-                            else:
-                                main_words['gender'] = 'С'
-                            if options[1] == 'неод':
-                                main_words['is_animate'] = 0
-                            else:
-                                main_words['is_animate'] = 1
-                        else:
-                            main_words['word_plural'] = word
-                        print(word, options)
+def get_nouns(cursor):
+    with open('bigdic.txt', 'r', encoding='utf8') as f:
+        buffer = []
+        sub_words = []
+        for line in f:
+            if line != ' \n':
+                if line.find(' | сущ ') != -1:
+                    buffer.append(line)
             else:
-                pass
-            buffer = []
-        if 1 < 0:
-            break
+                if len(buffer) == 12:
+                    word_info = {}
+                    for i, item in enumerate(buffer[:6]):
+                        sub_word = {}
+                        s_item = item.split('|')
+                        word = s_item[0].strip()
+                        options = s_item[1].strip().split()
+                        sub_word['word'] = word
+                        sub_word['word_case'] = options[-1].strip()
+                        word_plural = buffer[i+6].split('|')[0].strip()
+                        sub_word['word_plural'] = word_plural
+                        sub_words.append(sub_word.copy())
 
-#TODO Убрать два поля, доделать это дерьмо нах
+                    s_item = buffer[0].split('|')
+                    options = s_item[1].strip().split()
+                    word_info['is_nominal'] = 1
+                    if options[3] == 'муж':
+                        word_info['gender'] = 'М'
+                    elif options[3] == 'жен':
+                        word_info['gender'] = 'Ж'
+                    else:
+                        word_info['gender'] = 'С'
+                    if options[1] == 'неод':
+                        word_info['is_animate'] = 0
+                    else:
+                        word_info['is_animate'] = 1
+
+                    cursor.execute("INSERT INTO NOUNS_INFO (GENDER, IS_ANIMATE, IS_NOMINAL) VALUES (?,?,?)",
+                                   (word_info['gender'], word_info['is_animate'], word_info['is_nominal']))
+                    pk = cursor.lastrowid
+
+                    for item in sub_words:
+                        print(item)
+                        try:
+                            cursor.execute("INSERT INTO NOUNS (WORD, WORD_CASE, WORD_PLURAL, NOUN_INFO_FK) VALUES (?,?,?,?)",
+                                           (item['word'], item['word_case'], item['word_plural'], pk))
+                        except sqlite3.IntegrityError:
+                            raise
+                    # cursor.commit()
+
+                else:
+                    print('buffer != 12')
+                buffer = []
+                sub_words = []

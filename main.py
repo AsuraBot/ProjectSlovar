@@ -1,5 +1,6 @@
 import sqlite3
 import re
+from add_words import get_nouns
 
 
 def search(cursor, word_len=None, letters=None):
@@ -21,23 +22,24 @@ def search(cursor, word_len=None, letters=None):
     return cursor.fetchall()
 
 
-connection = sqlite3.connect('dictionary.db')
+connection = sqlite3.connect('bigdic.db')
 cursor = connection.cursor()
 
+get_nouns(cursor)
 
-while True:
-    # Ввод числа для поиска слов
-    try:
-        word_len = int(input("Введите количество букв: "))
-    except ValueError:
-        word_len = None
-
-    # Ввод букв для поиска слов
-    letters = input("Введите буквы: ")
-
-    res = search(cursor, word_len, letters)
-    for item, in res:
-        print(item)
+# while True:
+#     # Ввод числа для поиска слов
+#     try:
+#         word_len = int(input("Введите количество букв: "))
+#     except ValueError:
+#         word_len = None
+#
+#     # Ввод букв для поиска слов
+#     letters = input("Введите буквы: ")
+#
+#     res = search(cursor, word_len, letters)
+#     for item, in res:
+#         print(item)
 
 connection.commit()
 connection.close()
